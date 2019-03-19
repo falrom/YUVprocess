@@ -1,4 +1,25 @@
 import numpy as np
+import cv2
+import os
+
+
+def cv_imread(file_path, channel='BGR'):
+    """
+    mode: 'BGR' or 'RGB'
+    """
+    img = cv2.imdecode(np.fromfile(file_path, dtype=np.uint8), -1)
+    if channel == 'RGB':
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    return img
+
+
+def cv_imwrite(output_path, img, channel='BGR', ext='.png'):
+    """
+    image: 8-bit single-channel or 3-channel (with 'BGR' channel order) images
+    """
+    if channel == 'RGB':
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+    cv2.imencode(ext, img)[1].tofile(output_path)
 
 
 def YUVread(path, size, frame_num=None, start_frame=0, mode='420'):
@@ -183,9 +204,40 @@ def YUVcut(y, u, v, new_size, new_frame_num=None, start_frame=0, start_point=(0,
     return new_y, new_u, new_v
 
 
-if __name__ == '__main__':
-    y, u, v = YUVread('BasketballDrive_1920x1080_50.yuv', [1080, 1920])
-    print(y.shape, u.shape, v.shape)
-    y, u, v = YUVcut(y, u, v, [256, 256], 1, 0, [400, 800])
-    print(y.shape, u.shape, v.shape)
-    YUVwrite(y, u, v, 'test.yuv')
+def YUV_change_mode(y, u, v, direction='420to444'):
+    """
+    derection: '420to444' or '444to420' (YUV444 planar)
+    """
+    if direction == '420to444':
+        u = np.array([cv2.resize(ch, (u.shape[1] * 2, u.shape[2] * 2), interpolation=cv2.INTER_CUBIC) for ch in u])
+        v = np.array([cv2.resize(ch, (v.shape[1] * 2, v.shape[2] * 2), interpolation=cv2.INTER_CUBIC) for ch in v])
+    if direction == '444to420':
+        u = np.array([cv2.resize(ch, (u.shape[1] // 2, u.shape[2] // 2), interpolation=cv2.INTER_CUBIC) for ch in u])
+        v = np.array([cv2.resize(ch, (v.shape[1] // 2, v.shape[2] // 2), interpolation=cv2.INTER_CUBIC) for ch in v])
+    return y, u, v
+
+
+def save_img(y, u, v, output_path, mode='420', ext='.png'):
+    if mode == '420':
+        y, u, v = YUV_change_mode(y, u, v, '420to444')
+    if y.shape[0] == 1:
+        img = cv2.cvtColor(np.concatenate([y[0, :, :, np.newaxis], u[0, :, :, np.newaxis], v[0, :, :, np.newaxis]], 2),
+                           cv2.COLOR_YUV2BGR)
+        cv_imwrite(output_path, img, ext=ext)
+    else:
+        path = os.path.splitext(output_path)[0]
+        for fn in range(y.shape[0]):
+            img = cv2.cvtColor(
+                np.concatenate([y[fn, :, :, np.newaxis], u[fn, :, :, np.newaxis], v[fn, :, :, np.newaxis]], 2),
+                cv2.COLOR_YUV2BGR)
+            cv_imwrite(path + '_' + str(fn) + ext, img, ext=ext)
+
+# if __name__ == '__main__':
+#     y, u, v = YUVread('BasketballDrive_256_256_3frame.yuv', [256, 256])
+#     print(y.shape, u.shape, v.shape)
+#     YUVwrite(y, u, v, './test.yuv')
+#     save_img(y, u, v, './test.png')
+#
+#     # y, u, v = YUVread(r'D:\Documents\WORKS_ML_video\project20181017\data/BasketballDrive_1920x1080_50.yuv', [1080, 1920], 3)
+#     # y, u, v = YUVcut(y, u, v, [256, 256], 3, 0, [400, 800])
+#     # YUVwrite(y, u, v, 'BasketballDrive_256_256_3frame.yuv')
