@@ -31,7 +31,7 @@ def YUVread(path, size, frame_num=None, start_frame=0, mode='420'):
     :param frame_num: The number of frames you want to read, and it shouldn't smaller than the frame number of original
         yuv file. Defult is None, means read from start_frame to the end of file.
     :param start_frame: which frame begin from. Default is 0.
-    :param mode: yuv file mode, '420' or '444'
+    :param mode: yuv file mode, '420' or '444 planar'
     :return: byte_type y, u, v with a shape of [frame_num, height, width] of each
     """
     [height, width] = size
@@ -126,7 +126,7 @@ def Yread(path, size, frame_num=None, start_frame=0):
 
 def YUVwrite(y, u, v, path):
     """
-    Ndarray to file.
+    Ndarray to file. If '444', write by YUV444 planar mode.
 
     :param y: y with a shape of [frame_num, height, width] or [height, width]
     :param u: u with a shape of [frame_num, height, width] or [height, width]
@@ -206,14 +206,14 @@ def YUVcut(y, u, v, new_size, new_frame_num=None, start_frame=0, start_point=(0,
 
 def YUV_change_mode(y, u, v, direction='420to444'):
     """
-    derection: '420to444' or '444to420' (YUV444 planar)
+    derection: '420to444' or '444to420'
     """
     if direction == '420to444':
-        u = np.array([cv2.resize(ch, (u.shape[1] * 2, u.shape[2] * 2), interpolation=cv2.INTER_CUBIC) for ch in u])
-        v = np.array([cv2.resize(ch, (v.shape[1] * 2, v.shape[2] * 2), interpolation=cv2.INTER_CUBIC) for ch in v])
+        u = np.array([cv2.resize(ch, (u.shape[2] * 2, u.shape[1] * 2), interpolation=cv2.INTER_CUBIC) for ch in u])
+        v = np.array([cv2.resize(ch, (v.shape[2] * 2, v.shape[1] * 2), interpolation=cv2.INTER_CUBIC) for ch in v])
     if direction == '444to420':
-        u = np.array([cv2.resize(ch, (u.shape[1] // 2, u.shape[2] // 2), interpolation=cv2.INTER_CUBIC) for ch in u])
-        v = np.array([cv2.resize(ch, (v.shape[1] // 2, v.shape[2] // 2), interpolation=cv2.INTER_CUBIC) for ch in v])
+        u = np.array([cv2.resize(ch, (u.shape[2] // 2, u.shape[1] // 2), interpolation=cv2.INTER_CUBIC) for ch in u])
+        v = np.array([cv2.resize(ch, (v.shape[2] // 2, v.shape[1] // 2), interpolation=cv2.INTER_CUBIC) for ch in v])
     return y, u, v
 
 
@@ -233,11 +233,11 @@ def save_img(y, u, v, output_path, mode='420', ext='.png'):
             cv_imwrite(path + '_' + str(fn) + ext, img, ext=ext)
 
 # if __name__ == '__main__':
-#     y, u, v = YUVread('BasketballDrive_256_256_3frame.yuv', [256, 256])
+#     y, u, v = YUVread(
+#         r'D:\Documents\WORKS_ML_video\project20181017\data\BasketballDrive_1920x1080_50_000to049.yuv',
+#         [1080, 1920], 1)
 #     print(y.shape, u.shape, v.shape)
-#     YUVwrite(y, u, v, './test.yuv')
-#     save_img(y, u, v, './test.png')
-#
-#     # y, u, v = YUVread(r'D:\Documents\WORKS_ML_video\project20181017\data/BasketballDrive_1920x1080_50.yuv', [1080, 1920], 3)
-#     # y, u, v = YUVcut(y, u, v, [256, 256], 3, 0, [400, 800])
-#     # YUVwrite(y, u, v, 'BasketballDrive_256_256_3frame.yuv')
+#     # y, u, v = YUVcut(y, u, v, [200, 200], 1, 0, [400, 1060])
+# 
+#     save_img(y, u, v,
+#              r'D:\Documents\WORKS_ML_video\project20181017\data\BasketballDrive_1920x1080_50_000to000.png')
