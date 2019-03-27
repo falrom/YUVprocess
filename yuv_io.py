@@ -217,7 +217,7 @@ def YUV_change_mode(y, u, v, direction='420to444'):
     return y, u, v
 
 
-def save_img(y, u, v, output_path, mode='420', ext='.png'):
+def save_YUV_img(y, u, v, output_path, mode='420', ext='.png'):
     if mode == '420':
         y, u, v = YUV_change_mode(y, u, v, '420to444')
     if y.shape[0] == 1:
@@ -238,6 +238,6 @@ def save_img(y, u, v, output_path, mode='420', ext='.png'):
 #         [1080, 1920], 1)
 #     print(y.shape, u.shape, v.shape)
 #     # y, u, v = YUVcut(y, u, v, [200, 200], 1, 0, [400, 1060])
-# 
+#
 #     save_img(y, u, v,
 #              r'D:\Documents\WORKS_ML_video\project20181017\data\BasketballDrive_1920x1080_50_000to000.png')
