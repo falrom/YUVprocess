@@ -197,9 +197,9 @@ def YUVcut(y, u, v, new_size, new_frame_num=None, start_frame=0, start_point=(0,
             sw += 1
         new_y = y[start_frame:start_frame + new_frame_num, sh:sh + new_height, sw:sw + new_width]
         new_u = u[start_frame:start_frame + new_frame_num, (sh >> 1):((sh >> 1) + (new_height >> 1)),
-                (sw >> 1):((sw >> 1) + (new_width >> 1))]
+                  (sw >> 1):((sw >> 1) + (new_width >> 1))]
         new_v = v[start_frame:start_frame + new_frame_num, (sh >> 1):((sh >> 1) + (new_height >> 1)),
-                (sw >> 1):((sw >> 1) + (new_width >> 1))]
+                  (sw >> 1):((sw >> 1) + (new_width >> 1))]
 
     return new_y, new_u, new_v
 
@@ -231,6 +231,23 @@ def save_YUV_img(y, u, v, output_path, mode='420', ext='.png'):
                 np.concatenate([y[fn, :, :, np.newaxis], u[fn, :, :, np.newaxis], v[fn, :, :, np.newaxis]], 2),
                 cv2.COLOR_YUV2BGR)
             cv_imwrite(path + '_' + str(fn) + ext, img, ext=ext)
+
+
+def mse(img1, img2):
+    return np.mean((img1.astype(np.float32) - img2.astype(np.float32)) ** 2)
+
+
+def psnr(img1, img2, max=1.0):
+    _mse = mse(img1, img2)
+    return 10 * np.log10(max * max / _mse)
+
+
+# def _test_psnr():
+#     img1 = cv_imread('test_1.png', 'RGB')
+#     img2 = cv_imread('test_2.png', 'RGB')
+#     print(mse(img1, img2))
+#     print(psnr(img1, img2, 255))
+
 
 # if __name__ == '__main__':
 #     y, u, v = YUVread(
